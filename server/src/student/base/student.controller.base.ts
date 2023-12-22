@@ -16,11 +16,7 @@ import * as errors from "../../errors";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
 import { ApiNestedQuery } from "../../decorators/api-nested-query.decorator";
-import * as nestAccessControl from "nest-access-control";
-import * as defaultAuthGuard from "../../auth/defaultAuth.guard";
 import { StudentService } from "../student.service";
-import { AclValidateRequestInterceptor } from "../../interceptors/aclValidateRequest.interceptor";
-import { AclFilterResponseInterceptor } from "../../interceptors/aclFilterResponse.interceptor";
 import { StudentCreateInput } from "./StudentCreateInput";
 import { Student } from "./Student";
 import { StudentFindManyArgs } from "./StudentFindManyArgs";
@@ -30,27 +26,10 @@ import { ParentFindManyArgs } from "../../parent/base/ParentFindManyArgs";
 import { Parent } from "../../parent/base/Parent";
 import { ParentWhereUniqueInput } from "../../parent/base/ParentWhereUniqueInput";
 
-@swagger.ApiBearerAuth()
-@common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class StudentControllerBase {
-  constructor(
-    protected readonly service: StudentService,
-    protected readonly rolesBuilder: nestAccessControl.RolesBuilder
-  ) {}
-  @common.UseInterceptors(AclValidateRequestInterceptor)
+  constructor(protected readonly service: StudentService) {}
   @common.Post()
   @swagger.ApiCreatedResponse({ type: Student })
-  @swagger.ApiBody({
-    type: StudentCreateInput,
-  })
-  @nestAccessControl.UseRoles({
-    resource: "Student",
-    action: "create",
-    possession: "any",
-  })
-  @swagger.ApiForbiddenResponse({
-    type: errors.ForbiddenException,
-  })
   async createStudent(
     @common.Body() data: StudentCreateInput
   ): Promise<Student> {
@@ -68,18 +47,9 @@ export class StudentControllerBase {
     });
   }
 
-  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get()
   @swagger.ApiOkResponse({ type: [Student] })
   @ApiNestedQuery(StudentFindManyArgs)
-  @nestAccessControl.UseRoles({
-    resource: "Student",
-    action: "read",
-    possession: "any",
-  })
-  @swagger.ApiForbiddenResponse({
-    type: errors.ForbiddenException,
-  })
   async students(@common.Req() request: Request): Promise<Student[]> {
     const args = plainToClass(StudentFindManyArgs, request.query);
     return this.service.students({
@@ -96,18 +66,9 @@ export class StudentControllerBase {
     });
   }
 
-  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id")
   @swagger.ApiOkResponse({ type: Student })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
-  @nestAccessControl.UseRoles({
-    resource: "Student",
-    action: "read",
-    possession: "own",
-  })
-  @swagger.ApiForbiddenResponse({
-    type: errors.ForbiddenException,
-  })
   async student(
     @common.Param() params: StudentWhereUniqueInput
   ): Promise<Student | null> {
@@ -131,21 +92,9 @@ export class StudentControllerBase {
     return result;
   }
 
-  @common.UseInterceptors(AclValidateRequestInterceptor)
   @common.Patch("/:id")
   @swagger.ApiOkResponse({ type: Student })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
-  @swagger.ApiBody({
-    type: StudentUpdateInput,
-  })
-  @nestAccessControl.UseRoles({
-    resource: "Student",
-    action: "update",
-    possession: "any",
-  })
-  @swagger.ApiForbiddenResponse({
-    type: errors.ForbiddenException,
-  })
   async updateStudent(
     @common.Param() params: StudentWhereUniqueInput,
     @common.Body() data: StudentUpdateInput
@@ -177,14 +126,6 @@ export class StudentControllerBase {
   @common.Delete("/:id")
   @swagger.ApiOkResponse({ type: Student })
   @swagger.ApiNotFoundResponse({ type: errors.NotFoundException })
-  @nestAccessControl.UseRoles({
-    resource: "Student",
-    action: "delete",
-    possession: "any",
-  })
-  @swagger.ApiForbiddenResponse({
-    type: errors.ForbiddenException,
-  })
   async deleteStudent(
     @common.Param() params: StudentWhereUniqueInput
   ): Promise<Student | null> {
@@ -211,14 +152,8 @@ export class StudentControllerBase {
     }
   }
 
-  @common.UseInterceptors(AclFilterResponseInterceptor)
   @common.Get("/:id/parents")
   @ApiNestedQuery(ParentFindManyArgs)
-  @nestAccessControl.UseRoles({
-    resource: "Parent",
-    action: "read",
-    possession: "any",
-  })
   async findParents(
     @common.Req() request: Request,
     @common.Param() params: StudentWhereUniqueInput
@@ -242,11 +177,6 @@ export class StudentControllerBase {
   }
 
   @common.Post("/:id/parents")
-  @nestAccessControl.UseRoles({
-    resource: "Student",
-    action: "update",
-    possession: "any",
-  })
   async connectParents(
     @common.Param() params: StudentWhereUniqueInput,
     @common.Body() body: ParentWhereUniqueInput[]
@@ -264,11 +194,6 @@ export class StudentControllerBase {
   }
 
   @common.Patch("/:id/parents")
-  @nestAccessControl.UseRoles({
-    resource: "Student",
-    action: "update",
-    possession: "any",
-  })
   async updateParents(
     @common.Param() params: StudentWhereUniqueInput,
     @common.Body() body: ParentWhereUniqueInput[]
@@ -286,11 +211,6 @@ export class StudentControllerBase {
   }
 
   @common.Delete("/:id/parents")
-  @nestAccessControl.UseRoles({
-    resource: "Student",
-    action: "update",
-    possession: "any",
-  })
   async disconnectParents(
     @common.Param() params: StudentWhereUniqueInput,
     @common.Body() body: ParentWhereUniqueInput[]
